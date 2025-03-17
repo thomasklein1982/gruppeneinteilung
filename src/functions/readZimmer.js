@@ -39,7 +39,7 @@ export function readZimmer(rawInput, errors){
     }
   }
   zimmer.sort((a,b)=>{
-    return b.maxSize-a.maxSize;
+    return a.maxSize-b.maxSize;
   });
   return zimmer;
 }

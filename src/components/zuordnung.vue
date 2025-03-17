@@ -1,13 +1,16 @@
 <template>
-<div>
+<div class="zuordnung">
   <h3>Zuordnung #{{ nummer }}</h3>
+  <div>
+    Zimmergrößen: <template v-for="(z,i) in zuordnung.zimmer">{{(i>0? ', ':'')+ z.maxSize }}</template>
+  </div>
   <div>
     Mindestanzahl Wünsche (wer weniger Wünsche angibt, wird zuletzt zugeordnet)
     <InputText v-model="zuordnung.minimumWishCount" placeholder="Mindestanzahl Wünsche"/>
   </div>
   <div>
     Strafen für: Kein Wunsch erfüllt, nur 1 Wunsch erfüllt, nur 2 Wünsche erfüllt, ...
-    <InputText @change="penaltiesChanged()" v-model="penalties" placeholder="Strafen, mit Komma getrennt"/>
+    <InputText @change="strafenChanged()" v-model="strafen" placeholder="Strafen, mit Komma getrennt"/>
   </div>
   <Button label="Suchen" :disabled="searching" @click="starteSuche()"/>
   <div v-show="searching">Suche läuft {{ searchAnimation }} 
@@ -18,12 +21,24 @@
   </div>
   <div v-if="besteEinteilung">
     <div>Strafe: {{ besteEinteilung.strafe }}</div>
-    <div v-for="(g,i) in besteEinteilung.gruppen">
-      <h3>Zimmer {{ g.teilnehmer.length }}, Strafe: {{ g.strafe }}</h3>
-      <ol>
-        <li v-for="(t,j) in g.teilnehmer">{{ t }} [{{ this.zuordnung.teilnehmer[t].wuensche.join(", ") }}]</li>
-      </ol>
-    </div>
+    <div>Anzahl Versuche: {{ anzahlVersuche }}</div>
+    <template v-if="!searching">
+      <div v-for="(g,i) in besteEinteilung.gruppen">
+        <template v-if="g.teilnehmer.length>0">
+          <h3>#Personen: {{ g.teilnehmer.length }}, Strafe: {{ g.strafe }}</h3>
+          <ol>
+            <li v-for="(t,j) in g.teilnehmerFinalised">{{ t.name }} [{{ t.gewuenscht }}&times;] ({{t.strafe}})
+              <div style="color: green">
+                <span class="pi pi-check"/> <span v-html="t.erfuellt"/>
+              </div>
+              <div style="color: red" v-if="t.nichtErfuellt">
+                <span class="pi pi-times"/> <span v-html="t.nichtErfuellt"/>
+  </div>
+            </li>
+          </ol>
+        </template>
+      </div>
+    </template>
   </div>
 </div>
 </template>
@@ -31,7 +46,7 @@
 <script>
 import { Button, InputText } from 'primevue';
 import { sleep } from '../functions/sleep';
-import { macheZuordnung } from '../functions/macheZuordnung';
+import { finaliseZuordnung, macheZuordnung } from '../functions/macheZuordnung';
 export default{
   components: {
     Button,InputText
@@ -44,22 +59,40 @@ export default{
     return{
       searchAnimation: ".",
       searching: false,
-      penalties: "1000,100,50,10",
-      besteEinteilung: null
+      strafen: "1000,100,50,10",
+      besteEinteilung: null,
+      anzahlVersuche: 0
     }
   },
+  watch: {
+    zuordnung(){
+      if(this.zuordnung.result){
+        this.besteEinteilung=this.zuordnung.result;
+        this.anzahlVersuche=this.zuordnung.result.anzahlVersuche;
+      }else{
+        this.besteEinteilung=null;
+        this.anzahlVersuche=0;
+      }
+    }
+  },
+  mounted(){
+    
+    this.strafenChanged();
+  },
   methods: {
-    penaltiesChanged(){
-      let p=this.penalties.split(",");
-      this.zuordnung.penalties=[];
+    strafenChanged(){
+      let p=this.strafen.split(",");
+      this.zuordnung.strafen=[];
       for(let i=0;i<p.length;i++){
-        this.zuordnung.penalties.push(p[i]*1);
+        this.zuordnung.strafen.push(p[i]*1);
       }
     },
     async starteSuche(){
       this.searching=true;
       let besteStrafe=-1;
-      let counter=0;
+      if(this.besteEinteilung){
+        besteStrafe=this.besteEinteilung.strafe;
+      }
       let minCountWuensche=this.zuordnung.minimumWishCount;
       while(this.searching){
         let teilnehmer=[];
@@ -91,26 +124,39 @@ export default{
 
         let zimmer=JSON.parse(JSON.stringify(this.zuordnung.zimmer));
         
-        let res=macheZuordnung(this.zuordnung.teilnehmer,zimmer,teilnehmer,this.zuordnung.penalties,minCountWuensche);
+        let res=macheZuordnung(this.zuordnung.teilnehmer,zimmer,teilnehmer,this.zuordnung.strafen,minCountWuensche);
 
         if(!this.besteEinteilung || res.strafe<besteStrafe){
           besteStrafe=res.strafe;
           this.besteEinteilung=res;
+          
         }
 
-        if(counter%10===0){
+        if(this.anzahlVersuche%1000===0){
           this.searchAnimation+=".";
           if(this.searchAnimation.length>10){
             this.searchAnimation=".";
           }
+          await sleep(10);
         }
-        await sleep(10);
-        counter++;
+        
+        this.anzahlVersuche++;
       }
     },
     stoppeSuche(){
       this.searching=false;
+      this.zuordnung.result=this.besteEinteilung;
+      this.zuordnung.result.anzahlVersuche=this.anzahlVersuche;
+      finaliseZuordnung(this.zuordnung);
     }
   }
 }
 </script>
+
+<style scoped>
+  .zuordnung{
+    background-color: lightgoldenrodyellow;
+    border: 1pt solid black;
+    margin-bottom: 0.5rem;
+  }
+</style>

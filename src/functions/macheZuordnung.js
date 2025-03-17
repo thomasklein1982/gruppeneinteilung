@@ -28,6 +28,11 @@ export function macheZuordnung(alleTeilnehmer,alleZimmer,teilnehmer, strafen, mi
         besteGruppeIndex=j;
       }
     }
+    if(besteGruppeIndex<0){
+      //teilnehmer kann keiner gruppe zugeordnet werden, da alle voll
+      alert("Alle Gruppen sind voll, Teilnehmer '"+t+"' kann nicht zugeordnet werden")
+      continue;
+    }
     let g=gruppen[besteGruppeIndex];
     g.strafe=besteStrafe;
     g.teilnehmer.push(t.id);
@@ -53,6 +58,9 @@ function bewerteGruppe(alleTeilnehmer,gruppe,strafen,mindestAnzahlWuensche){
   for(let i=0;i<gruppe.teilnehmer.length;i++){
     let t=gruppe.teilnehmer[i];
     t=alleTeilnehmer[t];
+    if(!t){
+      console.error(gruppe.teilnehmer[i]);
+    }
     s+=bewerteGruppeFuerTeilnehmer(t,gruppe,strafen,mindestAnzahlWuensche);
   }
   return s;
@@ -73,4 +81,35 @@ function bewerteGruppeFuerTeilnehmer(teilnehmer,gruppe,strafen,mindestAnzahlWuen
     p=strafen[count];
   }
   return p;
+}
+
+export function finaliseZuordnung(zuordnung){
+  let zimmer=zuordnung.result.gruppen;
+  let strafen=zuordnung.strafen;
+  let alleTeilnehmer=zuordnung.teilnehmer;
+  for(let i=0;i<zimmer.length;i++){
+    let g=zimmer[i];
+    let teilnehmer=[];
+    for(let j=0;j<g.teilnehmer.length;j++){
+      let t=g.teilnehmer[j];
+      let teil=alleTeilnehmer[t];
+      if(!teil){
+        console.error(t);
+      }
+      teil.strafe=bewerteGruppeFuerTeilnehmer(teil,g,strafen,zuordnung.minimumWishCount);
+      teil.erfuellt=[];
+      teil.nichtErfuellt=[];
+      let anzWuensche=teil.wuensche.length;
+      for(let i=0;i<anzWuensche;i++){
+        let w=teil.wuensche[i];
+        let tw=alleTeilnehmer[w];
+        let text=tw.name+"["+tw.gewuenscht+"&times;]";
+        if(g.teilnehmer.indexOf(w)>=0) teil.erfuellt.push(text); else teil.nichtErfuellt.push(text);
+      }
+      teil.erfuellt=teil.erfuellt.join(", ");
+      teil.nichtErfuellt=teil.nichtErfuellt.join(", ");
+      teilnehmer.push(teil);
+    }
+    g.teilnehmerFinalised=teilnehmer;
+  }
 }

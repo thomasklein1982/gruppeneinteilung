@@ -2,7 +2,7 @@
   <div class="screen">
     <h1>Zimmereinteilung v{{ version }}</h1>
     <p>Mit dieser App kann man Teilnehmer*innen (TN) in Zimmer einteilen.</p>
-    <p>Anleitung:
+    <div>Anleitung:
       <ol>
         <li>Geben Sie die Wünsche der TN in folgender Form an:
   <pre>
@@ -44,7 +44,7 @@
             <ol>
               <li v-for="(e,i) in errors">
                 <div>
-                  <strong>{{ e.category }}, Zeile {{ e.linenumber }}</strong>: <code style="background-color: lightgray; min-width: 3rem">{{ e.rawtext }}</code>
+                  <strong>{{ e.category }}, Zeile {{ e.linenumber }}</strong>: <code style="background-color: lightgray; min-width: 3rem; white-space: pre;">{{ e.rawtext }}</code>
                 </div>
                 <div>
                   {{ e.message }}
@@ -56,7 +56,7 @@
         </li>
         
       </ol>
-    </p>
+    </div>
   </div>
 </template>
 

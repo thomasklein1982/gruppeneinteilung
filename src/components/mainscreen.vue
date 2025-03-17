@@ -1,12 +1,19 @@
 <template>
   <div class="screen">
     <h1>Gruppeneinteilung v{{ version }}</h1>
+    <p>
+      <Button @click="$emit('back')" label="Zurück zur Dateneingabe"/>
+    </p>
+    {{ $root.teilnehmerCount }} Teilnehmer
+    <p>
+      <Button label="Neue Zuordnung" @click="$root.createZuordnung()"/>
+    </p>
     <Zuordnung 
       v-for="(z,i) in zuordnungen"
       :nummer="zuordnungen.length-i"
       :zuordnung="z"
     />
-    <Button label="Neue Zuordnung" @click="$root.createZuordnung()"/>
+    
   </div>
 </template>
 

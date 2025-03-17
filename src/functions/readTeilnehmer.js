@@ -24,7 +24,8 @@ export function readTeilnehmer(rawInput, errors){
       id,
       name,
       wuensche,
-      lineNo: i+1
+      lineNo: i+1,
+      gewuenscht: 0
     };
     if(teilnehmer[id]){
       if(errors) errors.push(createError("Teilnehmer",i+1,lines[i],"Es gibt bereits einen Teilnehmer mit gleichem Namen."));
@@ -37,7 +38,7 @@ export function readTeilnehmer(rawInput, errors){
     let wuensche=t.wuensche.split(",");
     let liste=[];
     for(let i=0;i<wuensche.length;i++){
-      let n=wuensche[i].trim().toLowerCase();
+      let n=wuensche[i].toLowerCase().replace(/\s+/g," ").replace(/[^a-zßäöüé\- ]/g,"").trim();
       if(n.length===0) continue;
       if(!teilnehmer[n]){
         if(errors) errors.push(createError("Teilnehmer",t.lineNo,lines[t.lineNo-1],"Es gibt keinen Teilnehmer namens '"+n+"'."));
@@ -47,6 +48,8 @@ export function readTeilnehmer(rawInput, errors){
         if(errors) errors.push(createError("Teilnehmer",t.lineNo,lines[t.lineNo-1],"Der TN hat sich selbst als Wunsch angegeben."));
         continue;
       }
+      let tw=teilnehmer[n];
+      tw.gewuenscht++;
       liste.push(n);
     }
     t.wuensche=liste;
