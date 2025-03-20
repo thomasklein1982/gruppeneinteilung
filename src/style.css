@@ -8,3 +8,13 @@ html,body{
 .input-textarea{
   width: 100%;
 }
+
+@media screen {
+  
+}
+
+@media print {
+  .no-print{
+    display: none;
+  }
+}

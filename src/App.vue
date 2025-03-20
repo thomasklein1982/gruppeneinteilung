@@ -6,7 +6,7 @@
     v-show="screen==='start'"
   />
   <Mainscreen
-    v-show="screen==='main'"
+    v-if="screen==='main'"
     :zuordnungen="zuordnungen"
     @back="screen='start'"
   />

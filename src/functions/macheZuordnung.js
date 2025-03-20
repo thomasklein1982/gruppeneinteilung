@@ -14,9 +14,17 @@ export function macheZuordnung(alleTeilnehmer,alleZimmer,teilnehmer, strafen, mi
     let besteGruppeIndex=-1;
     let besteDifferenz=0;
     let besteStrafe=0;
+    let groesstesZimmer=alleZimmer[alleZimmer.length-1];
     for(let j=0;j<gruppen.length;j++){
       let g=gruppen[j];
       if(g.zimmer) continue;
+      //mache zimmer zu, die zwischenzeitlich voll geworden sind, weil sich das groesste Zimmer verändert hat:
+      if(g.teilnehmer.length===groesstesZimmer.maxSize){
+        g.zimmer=groesstesZimmer;
+        alleZimmer.pop();
+        groesstesZimmer=alleZimmer[alleZimmer.length-1];
+        continue;
+      }
       let alteStrafe=g.strafe;
       g.teilnehmer.push(t.id);
       let neueStrafe=bewerteGruppe(alleTeilnehmer,g,strafen,mindestAnzahlWuensche);
@@ -37,7 +45,6 @@ export function macheZuordnung(alleTeilnehmer,alleZimmer,teilnehmer, strafen, mi
     g.strafe=besteStrafe;
     g.teilnehmer.push(t.id);
     //pruefe, ob gruppe voll ist:
-    let groesstesZimmer=alleZimmer[alleZimmer.length-1];
     if(g.teilnehmer.length===groesstesZimmer.maxSize){
       g.zimmer=groesstesZimmer;
       alleZimmer.pop();
@@ -103,7 +110,7 @@ export function finaliseZuordnung(zuordnung){
       for(let i=0;i<anzWuensche;i++){
         let w=teil.wuensche[i];
         let tw=alleTeilnehmer[w];
-        let text=tw.name+"["+tw.gewuenscht+"&times;]";
+        let text=tw.name;
         if(g.teilnehmer.indexOf(w)>=0) teil.erfuellt.push(text); else teil.nichtErfuellt.push(text);
       }
       teil.erfuellt=teil.erfuellt.join(", ");
